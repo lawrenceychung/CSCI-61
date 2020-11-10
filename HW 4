@@ -1,0 +1,472 @@
+1.
+#header
+
+#ifndef BINTREE2_H
+#define BINTREE2_H
+#include <cassert>    // Provides assert
+#include <cstdlib>   // Provides NULL, std::size_t
+#include <iomanip>    // Provides std::setw
+#include <iostream>    // Provides NULL and size_t
+
+namespace main_savitch_10
+{
+
+	template <class Item>
+	class binary_tree_node
+	{
+	public:
+		// TYPEDEF
+		typedef Item value_type;
+		// CONSTRUCTOR
+		binary_tree_node(
+			const Item& init_data = Item(),
+			binary_tree_node* init_left = NULL,
+			binary_tree_node* init_right = NULL
+		)
+		{
+			data_field = init_data;
+			left_field = init_left;
+			right_field = init_right;
+		}
+		// MODIFICATION MEMBER FUNCTIONS
+		Item& data() { return data_field; }
+		binary_tree_node* left() { return left_field; }
+		binary_tree_node* right() { return right_field; }
+		void set_data(const Item& new_data) { data_field = new_data; }
+		void set_left(binary_tree_node* new_left) { left_field = new_left; }
+		void set_right(binary_tree_node* new_right) { right_field = new_right; }
+		// CONST MEMBER FUNCTIONS
+		const Item& data() const { return data_field; }
+		const binary_tree_node* left() const { return left_field; }
+		const binary_tree_node* right() const { return right_field; }
+		bool is_leaf() const
+		{
+			return (left_field == NULL) && (right_field == NULL);
+		}
+	private:
+		Item data_field;
+		binary_tree_node* left_field;
+		binary_tree_node* right_field;
+	};
+
+	template <class Process, class BTNode>
+    void inorder(Process f, BTNode* node_ptr)
+        // Library facilities used: cstdlib
+    {
+        if (node_ptr != NULL)
+        {
+            inorder(f, node_ptr->left());
+            f(node_ptr->data());
+            inorder(f, node_ptr->right());
+        }
+    }
+
+	template <class Item>
+    size_t tree_size(const binary_tree_node<Item>* node_ptr)
+        // Library facilities used: cstdlib
+    {
+        if (node_ptr == NULL)
+            return 0;
+        else
+            return
+            1 + tree_size(node_ptr->left()) + tree_size(node_ptr->right());
+    }
+
+    template <class BTNode, class SizeType, class Item>
+    void postorder(BTNode* node_ptr, SizeType &count, Item temp)
+        // Library facilities used: cstdlib
+    {
+        if (node_ptr != NULL)
+        {
+			postorder(node_ptr->left(), count, temp);
+			postorder(node_ptr->right(), count, temp);
+
+            temp[count] = node_ptr->data();
+            count++;
+        }
+    }
+
+    template <class Process, class BTNode>
+    void preorder(Process f, BTNode* node_ptr)
+        // Library facilities used: cstdlib
+    {
+        if (node_ptr != NULL)
+        {
+            f(node_ptr->data());
+            preorder(f, node_ptr->left());
+            preorder(f, node_ptr->right());
+        }
+    }
+
+    template <class Item, class SizeType>
+    void print(binary_tree_node<Item>* node_ptr, SizeType depth)
+        // Library facilities used: iomanip, iostream, stdlib
+    {
+        if (node_ptr != NULL)
+        {
+            print(node_ptr->right(), depth + 1);
+            std::cout << std::setw(4 * depth) << ""; // Indent 4*depth spaces.
+            std::cout << node_ptr->data() << std::endl;
+            print(node_ptr->left(), depth + 1);
+        }
+    }
+
+    template <class Item>
+    void tree_clear(binary_tree_node<Item>*& root_ptr)
+        // Library facilities used: cstdlib
+    {
+        binary_tree_node<Item>* child;
+        if (root_ptr != NULL)
+        {
+            child = root_ptr->left();
+            tree_clear(child);
+            child = root_ptr->right();
+            tree_clear(child);
+            delete root_ptr;
+            root_ptr = NULL;
+        }
+    }
+
+    template <class Item>
+    binary_tree_node<Item>* tree_copy(const binary_tree_node<Item>* root_ptr)
+        // Library facilities used: cstdlib
+    {
+        binary_tree_node<Item>* l_ptr;
+        binary_tree_node<Item>* r_ptr;
+
+        if (root_ptr == NULL)
+            return NULL;
+        else
+        {
+            l_ptr = tree_copy(root_ptr->left());
+            r_ptr = tree_copy(root_ptr->right());
+            return
+                new binary_tree_node<Item>(root_ptr->data(), l_ptr, r_ptr);
+        }
+    }
+
+
+}
+
+// #include "binTree-v2.cpp"
+#endif
+
+#.cpp
+min_heap#include <iostream>
+#include <string>
+#include <locale>
+#include <algorithm>
+#include <iomanip>
+#include "HW 4 Part 1.h"
+using namespace std;
+using namespace main_savitch_10;
+
+void min_heap(binary_tree_node<int>* root_ptr) // function that takes in a binary tree and converts it to a heap
+{
+	int count = 0;
+	int temp[tree_size(root_ptr)];
+
+	postorder(root_ptr, count, temp);
+
+	for (int i = 0; i < count; i++)
+	{
+		for (int k = i; k < count; k++)
+		{
+			if (temp[i] > temp[k])
+			{
+				int temporary = temp[i];
+				temp[i] = temp[k];
+				temp[k] = temporary;
+			}
+		}
+	}
+
+	binary_tree_node<int>* new_root_ptr(NULL);
+	binary_tree_node<int>* current_ptr(NULL);
+
+	new_root_ptr = new binary_tree_node<int>(temp[0]);
+
+	print_heap(heap_insert(temp, new_root_ptr, 0, count), count);
+}
+
+void print_heap(binary_tree_node<int>* node_ptr, int count)
+{
+	if (node_ptr != NULL)
+	{
+		print(node_ptr->right(), count + 1);
+		cout << setw(4 * count) << ""; // Indent 4*depth spaces.
+		cout << node_ptr->data() << endl;
+		print(node_ptr->left(), count + 1);
+	}
+}
+
+binary_tree_node<int>* heap_insert(int arr[], binary_tree_node<int>* root_ptr, int index, int array_size)
+{
+	if (index < array_size)
+	{
+		binary_tree_node<int>* temp = new binary_tree_node<int>(arr[index]);
+		root_ptr = temp;
+
+		root_ptr->set_right(heap_insert(arr, root_ptr->right(), 2 * index + 2, array_size));
+		root_ptr->set_left(heap_insert(arr, root_ptr->left(), 2 * index + 1, array_size));
+	}
+
+	return root_ptr;
+}
+
+2.
+#include <iostream>
+#include <queue>
+#include <stack>
+#include <ctime>
+#include <cstdlib>
+
+using namespace std;
+
+class student
+{
+public:
+    int Get_time_enter_queue()
+    {
+        return time_enter_queue;
+    }
+    void Set_time_enter_queue(int i)
+    {
+        time_enter_queue = i;
+    }
+    int Get_mins_for_service()
+    {
+        return mins_for_service;
+    }
+    void Set_mins_for_service(int i)
+    {
+        mins_for_service = i;
+    }
+    void Decrement_mins_for_service()
+    {
+        mins_for_service--;
+    }
+    int Get_time_left_for_service()
+    {
+        return time_left_for_service;
+    }
+    void Set_time_left_for_service(int i)
+    {
+        time_left_for_service = i;
+    }
+    void Decrement_time_left_for_service()
+    {
+        time_left_for_service--;
+    }
+    int Get_priority()
+    {
+        return priority;
+    }
+    void Set_priority(int i)
+    {
+        priority = i;
+    }
+private:
+    int time_enter_queue;
+    int mins_for_service;
+    int time_left_for_service;
+    int priority;
+};
+
+class office
+{
+public:
+    float Get_average_queue()
+    {
+        return average_queue;
+    }
+    void Set_average_queue(float i)
+    {
+        average_queue = i;
+    }
+    float Get_average_oh()
+    {
+        return average_oh;
+    }
+    void Set_average_oh(float i)
+    {
+        average_oh = i;
+    }
+    float Get_after_oh()
+    {
+        return after_oh;
+    }
+    void Set_after_oh(float i)
+    {
+        after_oh = i;
+    }
+private:
+    float average_queue;
+    float average_oh;
+    float after_oh;
+};
+
+
+bool random_arrival();
+float random_service_rate();
+office office_hours_sim(int total_time);
+
+int main()
+{
+    srand(time(NULL)); // random number seed
+    float avg_queue = 0; // initialization variables to hold the average times over 100 office hour sessions
+    float avg_oh = 0;
+    float avg_time_after = 0;
+
+    for (int i = 0; i < 100; i++)
+    {
+        office answer = office_hours_sim(60); // total simulation time is 1 minutes = 60 sec
+
+        avg_queue = (avg_queue + answer.Get_average_queue()) / 2; // calculates the average time spend in the queue over 100 office hour sessions
+        avg_oh = (avg_oh + answer.Get_average_oh()) / 2; // calcuates the average time spend in the office over 100 office hour sessions
+
+        if (i == 0)
+        {
+            avg_time_after += answer.Get_after_oh(); // the first time, just add the time the professor spend in their office after office hours
+        }
+        else
+        {
+            avg_time_after = (avg_time_after + answer.Get_after_oh()) / 2; // any other time, calcuate the average time the professor spent in their office after office hours
+        }
+    }
+
+    cout << "Average queue time after 100 Office Hours: " << avg_queue << " mins." << endl; // prints out results
+    cout << "Average time a student spent in Office Hours: " << avg_oh << " mins." << endl;
+    cout << "Average time professor spent after Office Hours ended: " << avg_time_after << " mins." << endl;
+
+    return 0;
+}
+
+bool random_arrival()
+{
+    int random_gen = rand() % 10 + 5;
+    float random = rand() % random_gen + 1; // assuming that max arrival rates of students are 1 student per 5 mins, and the min arrical rates of students are 1 student per 10 min
+    return (random == 1);
+
+}
+
+float random_service_rate()
+{
+    float random = rand() % 15 + 1; // assuming that the max service time is 15 mins and that the min service time is 1 min
+    return random;
+}
+
+int random_priority()
+{
+    int random = rand() % 4 + 1;
+    return random;
+}
+
+office office_hours_sim(int total_time)
+{
+    queue<student> oh_line; // queue for being office hours line
+    queue<student> oh; // queue for being in office hours
+    queue <student> line_holder;
+    float student_count = 0; // running counters for number of students who came, time professor spent answering questions after office hours ended, total time the professor spend in his/her office, and total time of all waiting times
+    float time_after_oh = 0;
+    float time_in_office = 0;
+    float time_in_queue = 0;
+
+    for (int i = 1; i <= total_time; i++) // simulation for 60 mins, 1 min at a time
+    {
+        if (random_arrival()) // if a studnet arrives
+        {
+            student_count++; // increment the counter for students
+            student student1; // create pointer
+            student1.Set_time_enter_queue(i); // log the time that that specific student arrived in line
+            student1.Set_mins_for_service(random_service_rate()); // create a randomly generated time it takes for the professor to answer the students question
+            student1.Set_time_left_for_service(student1.Get_mins_for_service()); // set the time left it takes the professor to answer the question
+            student1.Set_priority(random_priority()); // set a random priority for each student
+
+            int temp_priority = student1.Get_priority(); //holds the priority number of the student being added
+
+            student *temp;
+            temp = &oh_line.front(); // pointer to the front of the office hour line
+
+            while (!oh_line.empty() && temp->Get_priority() >= temp_priority) // if the front student's priority number is greater than or equal to the priority number of the studnet being added, the student is pushed onto a temporary queue
+            {
+                line_holder.push(*temp);
+                oh_line.pop();
+            }
+
+            line_holder.push(student1); // push the student onto the office hours line
+
+            while (!oh_line.empty()) // pushes the rest of the office hour queue to the temporary queue
+            {
+                line_holder.push(*temp);
+                oh_line.pop();
+            }
+
+            student *temp2;
+            temp2 = &line_holder.front(); // pointer to the front of the temporary queue
+
+            while (!line_holder.empty()) //copies everything from the temporary queue to the office hour queue
+            {
+                oh_line.push(*temp2);
+                line_holder.pop();
+            }
+        }
+
+        if (!oh_line.empty() && oh.empty()) // if the office hour line is NOT empty and the office IS empty
+        {
+            student *temp; // create a temporary pointer
+            temp = &oh_line.front(); // points at the top of the office hour line queue
+            time_in_queue += i - temp->Get_time_enter_queue(); // subtract the current time with the time when the student entered the queue to determine the time that the student waited
+            oh_line.pop(); // pop the student off the office hour line queue
+            oh.push(*temp); // push the student onto the office hour queue
+        }
+        else if (!oh.empty()) // But if the office is NOT empty
+        {
+            student *temp; // create a temporary pointer
+            temp = &oh.front(); // points at the front of the office hour queue
+            temp->Decrement_mins_for_service(); // decrease the time it takes the professor to answer the question by 1 min
+            time_in_office++; // add 1 min to the time that a student has spent in the office
+
+            if (temp->Get_mins_for_service() == 0) // when the time it takes the professor to answer the question turns into 0
+            {
+                oh.pop(); // pop the studnet off the office hours queue
+            }
+        }
+    }
+
+    while (!oh_line.empty() || !oh.empty()) //after the 60 mins of office hours, finish meeting with the students still in queue
+    {
+        while (!oh.empty()) // while the office is not empty
+        {
+            student *temp; // create a temporary pointer
+            temp = &oh.front(); // point to the front of the office hour queue
+            temp->Decrement_time_left_for_service(); // decrease the time left to answer the question by 1 min
+            time_in_office++; // add another min to the time students spend in the office
+
+            if (temp->Get_time_left_for_service() == 0) // once the time left to answer a question is 0
+            {
+                oh.pop(); //pop off the student from the office hour queue
+            }
+            time_after_oh++; // increase the time the professor spend in his offer after office hours are over
+        }
+
+        if (!oh_line.empty()) // if the office hour line queue is not empty
+        {
+            student *temp; // create a temp pointer
+            temp = &oh_line.front(); // point it to the front of the office hour line queue
+            time_in_queue = (60 + time_after_oh) - temp->Get_time_enter_queue();
+            oh.push(*temp); // push the student onto the office hour queue
+
+            oh_line.pop(); // pop the student off the office hour line queue
+        }
+
+    }
+
+    office temp;
+    temp.Set_average_queue(time_in_queue / student_count); // calculate the average time students have spend in the queue for this office hour session
+    temp.Set_average_oh(time_in_office / student_count); // calculate the average time spend in the office hours
+    temp.Set_after_oh(time_after_oh); // returns the time the professor spend in thier office after office hours ended
+
+    return(temp);
+}
+
