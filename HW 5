@@ -1,0 +1,344 @@
+1&2. 
+
+
+3.
+#include <iostream>
+#include <queue>
+#include <stack>
+#include <ctime>
+#include <cstdlib>
+#include <string>
+#include <map>
+#include <fstream>
+
+using namespace std;
+
+class student // student class to hold variables
+{
+public:
+    int Get_time_enter_queue() // Getter functions for the time the student entered the queue
+    {
+        return time_enter_queue;
+    }
+    void Set_time_enter_queue(int i) // Setter function for the time the student entered the queue
+    {
+        time_enter_queue = i;
+    }
+    int Get_mins_for_service() // Getter for the time to answer the student's question
+    {
+        return mins_for_service;
+    }
+    void Set_mins_for_service(int i) // Setter for the time to answer the student's question
+    {
+        mins_for_service = i;
+    }
+    void Decrement_mins_for_service() // decreases the service time by 1
+    {
+        mins_for_service--;
+    }
+    int Get_time_left_for_service() // Getter for the time left to answer the question
+    {
+        return time_left_for_service;
+    }
+    void Set_time_left_for_service(int i) // Setter for the time left to answer the question
+    {
+        time_left_for_service = i;
+    }
+    void Decrement_time_left_for_service() // decreases the time left to answer the question
+    {
+        time_left_for_service--;
+    }
+    int Get_priority() // Getter to get priority
+    {
+        return priority;
+    }
+    void Set_priority(int i) // Setter to get priority
+    {
+        priority = i;
+    }
+private:
+    int time_enter_queue;
+    int mins_for_service;
+    int time_left_for_service;
+    int priority;
+};
+
+class office // class to hold the varibles for the office hour
+{
+public:
+    float Get_average_queue() // Getter for the average queue
+    {
+        return average_queue;
+    }
+    void Set_average_queue(float i) // Setter for the average queue
+    {
+        average_queue = i;
+    }
+    float Get_average_oh() // Getter for the average time spent in office hours
+    {
+        return average_oh;
+    }
+    void Set_average_oh(float i) // Setter for the average time spent in office hours
+    {
+        average_oh = i;
+    }
+    float Get_after_oh() // Getter for the time the prof spent after hours
+    {
+        return after_oh;
+    }
+    void Set_after_oh(float i) // Setter for the time the prof spent after hours
+    {
+        after_oh = i;
+    }
+private:
+    float average_queue;
+    float average_oh;
+    float after_oh;
+};
+
+
+bool random_arrival();
+float random_service_rate();
+office office_hours_sim(int total_time, multimap<string,string>& studnent_map);
+string random_name();
+string random_topic();
+
+int main()
+{
+    srand(time(NULL)); // random number seed
+    float avg_queue = 0; // initialization variables to hold the average times over 100 office hour sessions
+    float avg_oh = 0; // initialization of average office hour to 0
+    float avg_time_after = 0; // initialization of average time prof spent after hours to 0
+    multimap<string,string> student_map; // map that holds student name as the key and topic of question as the value
+    int count_arr[31]; // initialization of array to count how many times a student showed up to office hours
+
+    for (int i = 0; i < 100; i++)
+    {
+        office answer = office_hours_sim(60, student_map); // total simulation time is 1 minutes = 60 sec
+
+        avg_queue = (avg_queue + answer.Get_average_queue()) / 2; // calculates the average time spend in the queue over 100 office hour sessions
+        avg_oh = (avg_oh + answer.Get_average_oh()) / 2; // calcuates the average time spend in the office over 100 office hour sessions
+
+        if (i == 0)
+        {
+            avg_time_after += answer.Get_after_oh(); // the first time, just add the time the professor spend in their office after office hours
+        }
+        else
+        {
+            avg_time_after = (avg_time_after + answer.Get_after_oh()) / 2; // any other time, calcuate the average time the professor spent in their office after office hours
+        }
+    }
+
+
+    for (int i = 0; i < 26; i++) // counts the number of times each student went to office hours after 100 office hours
+    {
+        int count = 0; // initialization of count to 0
+        string alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        string alpha2 = "Student";
+        char letter = (alpha.at(i));
+        alpha2 += letter;
+
+        count = student_map.count(alpha2);
+
+        count_arr[i] = count;
+    }
+
+    for (int i = 0; i < 26; i++) // prints the topics that each student came to office hours for
+    {
+        string alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        string alpha2 = "Student";
+        char letter = (alpha.at(i));
+        alpha2 += letter;
+
+        ofstream myfile;
+        myfile.open(alpha2+".txt");
+
+        myfile << alpha2 << " was in Office Hours " << count_arr[i] << " times." << endl;
+        myfile << "Topics: ";
+
+        multimap <string, string> :: iterator itr;
+        for (itr = student_map.begin(); itr != student_map.end(); ++itr)
+        {
+            if (itr->first == alpha2)
+            {
+                myfile << itr->second << " ";
+            }
+
+        }
+        myfile << endl;
+        myfile.close();
+    }
+
+
+
+    cout << endl;
+    cout << "Average queue time after 100 Office Hours: " << avg_queue << " mins." << endl; // prints out results
+    cout << "Average time a student spent in Office Hours: " << avg_oh << " mins." << endl;
+    cout << "Average time professor spent after Office Hours ended: " << avg_time_after << " mins." << endl;
+
+    return 0;
+}
+
+
+bool random_arrival()
+{
+    int random_gen = rand() % 10 + 5;
+    float random = rand() % random_gen + 1; // assuming that max arrival rates of students are 1 student per 5 mins, and the min arrical rates of students are 1 student per 10 min
+    return (random == 1);
+}
+
+float random_service_rate()
+{
+    float random = rand() % 15 + 1; // assuming that the max service time is 15 mins and that the min service time is 1 min
+    return random;
+}
+
+int random_priority() // creates a random priority for a student
+{
+    int random = rand() % 4 + 1;
+    return random;
+}
+
+string random_topic() // chooses a random topic for each student
+{
+    int random = rand() % 4 + 1;
+
+    switch (random)
+    {
+        case 1:
+            return "Stacks";
+            break;
+        case 2:
+            return "Heaps";
+            break;
+        case 3:
+            return "Trees";
+            break;
+        case 4:
+            return "Queue";
+            break;
+    }
+}
+
+string random_name() // generates a random name Student(A-Z)
+{
+    string alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    int random = rand() % 26 + 0;
+
+    string alpha2 = "Student";
+    char letter = (alpha.at(random));
+    alpha2 += letter;
+    return alpha2;
+}
+
+office office_hours_sim(int total_time, multimap<string,string>& student_map)
+{
+    queue<student> oh_line; // queue for being office hours line
+    queue<student> oh; // queue for being in office hours
+    queue <student> line_holder;
+    float student_count = 0; // running counters for number of students who came, time professor spent answering questions after office hours ended, total time the professor spend in his/her office, and total time of all waiting times
+    float time_after_oh = 0;
+    float time_in_office = 0;
+    float time_in_queue = 0;
+
+    for (int i = 1; i <= total_time; i++) // simulation for 60 mins, 1 min at a time
+    {
+        if (random_arrival()) // if a studnet arrives
+        {
+            student_map.insert (pair<string,string>(random_name(),random_topic()));
+
+            student_count++; // increment the counter for students
+            student student1; // create pointer
+            student1.Set_time_enter_queue(i); // log the time that that specific student arrived in line
+            student1.Set_mins_for_service(random_service_rate()); // create a randomly generated time it takes for the professor to answer the students question
+            student1.Set_time_left_for_service(student1.Get_mins_for_service()); // set the time left it takes the professor to answer the question
+            student1.Set_priority(random_priority()); // set a random priority for each student
+
+            int temp_priority = student1.Get_priority(); //holds the priority number of the student being added
+
+            student *temp;
+            temp = &oh_line.front(); // pointer to the front of the office hour line
+
+            while (!oh_line.empty() && temp->Get_priority() >= temp_priority) // if the front student's priority number is greater than or equal to the priority number of the studnet being added, the student is pushed onto a temporary queue
+            {
+                line_holder.push(*temp);
+                oh_line.pop();
+            }
+
+            line_holder.push(student1); // push the student onto the office hours line
+
+            while (!oh_line.empty()) // pushes the rest of the office hour queue to the temporary queue
+            {
+                line_holder.push(*temp);
+                oh_line.pop();
+            }
+
+            student *temp2;
+            temp2 = &line_holder.front(); // pointer to the front of the temporary queue
+
+            while (!line_holder.empty()) //copies everything from the temporary queue to the office hour queue
+            {
+                oh_line.push(*temp2);
+                line_holder.pop();
+            }
+        }
+
+        if (!oh_line.empty() && oh.empty()) // if the office hour line is NOT empty and the office IS empty
+        {
+            student *temp; // create a temporary pointer
+            temp = &oh_line.front(); // points at the top of the office hour line queue
+            time_in_queue += i - temp->Get_time_enter_queue(); // subtract the current time with the time when the student entered the queue to determine the time that the student waited
+            oh_line.pop(); // pop the student off the office hour line queue
+            oh.push(*temp); // push the student onto the office hour queue
+        }
+        else if (!oh.empty()) // But if the office is NOT empty
+        {
+            student *temp; // create a temporary pointer
+            temp = &oh.front(); // points at the front of the office hour queue
+            temp->Decrement_mins_for_service(); // decrease the time it takes the professor to answer the question by 1 min
+            time_in_office++; // add 1 min to the time that a student has spent in the office
+
+            if (temp->Get_mins_for_service() == 0) // when the time it takes the professor to answer the question turns into 0
+            {
+                oh.pop(); // pop the studnet off the office hours queue
+            }
+        }
+    }
+
+    while (!oh_line.empty() || !oh.empty()) //after the 60 mins of office hours, finish meeting with the students still in queue
+    {
+        while (!oh.empty()) // while the office is not empty
+        {
+            student *temp; // create a temporary pointer
+            temp = &oh.front(); // point to the front of the office hour queue
+            temp->Decrement_time_left_for_service(); // decrease the time left to answer the question by 1 min
+            time_in_office++; // add another min to the time students spend in the office
+
+            if (temp->Get_time_left_for_service() == 0) // once the time left to answer a question is 0
+            {
+                oh.pop(); //pop off the student from the office hour queue
+            }
+            time_after_oh++; // increase the time the professor spend in his offer after office hours are over
+        }
+
+        if (!oh_line.empty()) // if the office hour line queue is not empty
+        {
+            student *temp; // create a temp pointer
+            temp = &oh_line.front(); // point it to the front of the office hour line queue
+            time_in_queue = (60 + time_after_oh) - temp->Get_time_enter_queue();
+            oh.push(*temp); // push the student onto the office hour queue
+
+            oh_line.pop(); // pop the student off the office hour line queue
+        }
+
+    }
+
+    office temp;
+    temp.Set_average_queue(time_in_queue / student_count); // calculate the average time students have spend in the queue for this office hour session
+    temp.Set_average_oh(time_in_office / student_count); // calculate the average time spend in the office hours
+    temp.Set_after_oh(time_after_oh); // returns the time the professor spend in thier office after office hours ended
+
+    return(temp);
+}
