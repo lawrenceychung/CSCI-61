@@ -1,0 +1,127 @@
+#include <iostream>
+#include <stack>
+#include <string>
+
+using namespace std;
+
+
+void infixToPrefix(string& expression); //defining the functions that will be used in the code
+void prefixToInfix(string& expression);
+
+int main()
+{
+    string expression;
+    cout <<"Enter a mathmatical expresison with letters either as an Infix (Ex. A+B) or a Prefix (Ex. +AB)" << endl; // asks for the user to enter a mathmatical expresison; ONLY works with letters and NOT numbers EX. A+B/C
+    cin >> expression; // takes in the users expression as a string
+
+    if (expression[0] == '+' || expression[0] == '-' || expression[0] == '*' || expression[0] == '/') //tests to see if the first character is an operator, and if it is then calls the prefixToInfix function
+    {
+        prefixToInfix(expression);
+    }
+    else if (isalpha(expression[0])) // tests to see if the first character is a letter, in which case it would call the infixToPrefix function
+    {
+        infixToPrefix(expression);
+    }
+    else
+    {
+        cout << "Invalid expression" << endl; // if neither case is right, then the user didn't enter a mathmatical expression with letters
+    }
+    return 0;
+}
+
+void infixToPrefix(string& expression)
+{
+    stack <string> letters; //creates stacks for letters
+    stack <char> operators; // creates stacks for operators
+    stack <char> temp_op; // creates a temp stack for operators
+    stack <string> temp_let; // creates a temp stack for letters
+
+    string temp_expression = '(' + expression + ')'; // adds parenthesis around the whole expression
+    for (int i = temp_expression.length() - 1; i >= 0; i--) //starts reading in one character at a time backwards
+    {
+        if (temp_expression[i] == '(') //if the character is '(', then that means it it completes a set of parenthesis
+        {
+            do{
+                while (operators.top() == '+' || operators.top() == '-') // checks whether the top operator is * or / which gets combined first in math
+                {
+                    temp_op.push(operators.top()); // if the operator is not a * or /, then it pushes the top of the operator and the letter stack off into their temp stacks, respectively
+                    operators.pop();
+
+                    if (operators.top() == ')') // however, if the operator below the + or - is the ')', then that means that all the * and / have already been combined
+                    {
+                        operators.push(temp_op.top()); // thus, it pushes the operator that it pushed off earlier  back onto the operators stack
+                        temp_op.pop();
+                        break; // and breaks out of this while loop
+                    }
+
+                    temp_let.push(letters.top());
+                    letters.pop();
+                }
+                string temp_letter = letters.top(); // takes the top letter for the  letters stack
+                letters.pop();
+                string temp = operators.top() + temp_letter + letters.top(); // combines the operator and letters in the corerct order
+                letters.pop(); //pops off all used characters
+                operators.pop();
+
+                letters.push(temp); // pushes the combined string back on the letters stack
+
+                while (!temp_op.empty()) // if the top of the operator was a + or - and was successfully pushed off of the main stacks, then this will push them back on after the * or / combination has been completed
+                {
+                    operators.push(temp_op.top());
+                    temp_op.pop();
+
+                    letters.push(temp_let.top());
+                    temp_let.pop();
+                }
+            }
+            while (operators.top() != ')'); //keep repeating these steps until it reaches ')', which completes the parenthesis
+            operators.pop(); //finally pop the '(' that started this all
+        }
+        else if (temp_expression[i] == '+' || temp_expression[i] == '-' || temp_expression[i] == '*' || temp_expression[i] == '/' || temp_expression[i] == ')') // if the character is an operator, push it onto the operators stack
+        {
+            operators.push(temp_expression[i]);
+        }
+
+        else if (isalpha(temp_expression[i])) // if the character is a letter, push it onto the letters stack
+        {
+            string temp(1, temp_expression[i]); //conversion from chra to string
+            letters.push(temp);
+        }
+        else
+        {
+            cout << "Invalid Expression" << endl; // if the chracter is neither, then the user didn't follow the rules
+            break;
+        }
+    }
+    cout << letters.top() << endl; // prints the final string, which should be the prefix version of the infix input
+}
+
+void prefixToInfix(string& expression)
+{
+    stack <string> numbers; //creates a string stack
+
+    for (int i = expression.length() - 1; i >= 0; i--) // reads in each characters from the expression backwards
+    {
+        if (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/') // if the chracter is an operator, then it combines the top 2 strings from numbers with the corresponding operator
+        {
+            string temp_a = numbers.top();
+            numbers.pop();
+            string temp_b = numbers.top();
+            numbers.pop();
+
+            string temp_final = '(' + temp_a + expression[i] + temp_b + ')'; //combines the top 2 strings in the numbers stack and the correct operator
+            numbers.push(temp_final); // pushes the combined string back onto the numbers stack
+        }
+        else if (isalpha(expression[i])) //if the character is a letter, then it simply pushes the letter onto the numbers stack
+        {
+            string temp(1, expression[i]); // conversion from char to string
+            numbers.push(temp);
+        }
+        else
+        {
+            cout << "Invalid Expression" << endl;// if the chracter is neither, then the user didn't follow the rules
+            break;
+        }
+    }
+    cout << numbers.top() << endl; //prints the final string, which should be the infix version of the prefix input
+}
